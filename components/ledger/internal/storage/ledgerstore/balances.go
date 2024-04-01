@@ -74,7 +74,9 @@ func (store *Store) GetAggregatedBalances(ctx context.Context, q GetAggregatedBa
 				ColumnExpr("distinct on (moves.account_address, moves.asset) moves.*").
 				Order("account_address", "asset").
 				Where("moves.ledger = ?", store.name).
-				Apply(filterPIT(q.PIT, pitColumn))
+				Apply(filterPIT(q.PIT, pitColumn)).
+				Apply(filterOOT(q.OOT, pitColumn))
+
 
 			if q.UseInsertionDate {
 				moves = moves.Order("moves.insertion_date desc")
@@ -88,10 +90,10 @@ func (store *Store) GetAggregatedBalances(ctx context.Context, q GetAggregatedBa
 					moves = moves.Join(`join lateral (	
 						select metadata
 						from accounts_metadata am 
-						where am.accounts_seq = moves.accounts_seq and (? is null or date <= ?)
+						where am.accounts_seq = moves.accounts_seq and (? is null or date <= ?) and (? is null or date >= ?)
 						order by revision desc 
 						limit 1
-					) am on true`, q.PIT, q.PIT)
+					) am on true`, q.PIT, q.PIT, q.OOT, q.OOT)
 				} else {
 					moves = moves.Join(`join lateral (	
 						select metadata

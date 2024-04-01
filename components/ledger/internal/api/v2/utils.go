@@ -15,18 +15,32 @@ import (
 )
 
 func getPITFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
+	
 	pitString := r.URL.Query().Get("pit")
-	if pitString == "" {
-		return &ledgerstore.PITFilter{
-			PIT: pointer.For(time.Now()),
-		}, nil
+	ootString := r.URL.Query().Get("oot")
+
+	pit := time.Now()
+	oot := time.Time{}
+
+	if pitString != "" {
+		var err error
+		pit, err = time.ParseTime(pitString)
+		if err != nil {
+			return nil,err
+		}
 	}
-	pit, err := time.ParseTime(pitString)
-	if err != nil {
-		return nil, err
+
+	if ootString != "" {
+		var err error 
+		oot, err = time.ParseTime(ootString)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return &ledgerstore.PITFilter{
 		PIT: &pit,
+		OOT: &oot,
 	}, nil
 }
 

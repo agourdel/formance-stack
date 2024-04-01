@@ -171,6 +171,15 @@ func filterPIT(pit *time.Time, column string) func(query *bun.SelectQuery) *bun.
 	}
 }
 
+func filterOOT(oot *time.Time, column string) func(query *bun.SelectQuery) *bun.SelectQuery {
+	return func(query *bun.SelectQuery) *bun.SelectQuery {
+		if oot == nil || oot.IsZero() {
+			return query
+		}
+		return query.Where(fmt.Sprintf("%s >= ?", column), oot)
+	}
+}
+
 type PaginatedQueryOptions[T any] struct {
 	QueryBuilder query.Builder `json:"qb"`
 	PageSize     uint64        `json:"pageSize"`
@@ -223,8 +232,13 @@ func NewPaginatedQueryOptions[T any](options T) PaginatedQueryOptions[T] {
 	}
 }
 
+// 
+// PIT : Point In Time
+// OOT : Origin Of Time
+//
 type PITFilter struct {
-	PIT *time.Time `json:"pit"`
+	PIT *time.Time `json:"pit"`  
+	OOT *time.Time `json:"oot"`
 }
 
 type PITFilterWithVolumes struct {

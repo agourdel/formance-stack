@@ -34,7 +34,7 @@ func (store *Store) buildAccountQuery(q PITFilterWithVolumes, query *bun.SelectQ
 				left join lateral (
 					select metadata, accounts_seq
 					from accounts_metadata
-					where accounts_metadata.accounts_seq = accounts.seq and accounts_metadata.date < ?
+					where accounts_metadata.accounts_seq = accounts.seq and accounts_metadata.date <= ?
 					order by revision desc 
 					limit 1
 				) accounts_metadata on true
@@ -46,13 +46,13 @@ func (store *Store) buildAccountQuery(q PITFilterWithVolumes, query *bun.SelectQ
 	if q.ExpandVolumes {
 		query = query.
 			ColumnExpr("volumes.*").
-			Join("join get_account_aggregated_volumes(?, accounts.address, ?) volumes on true", store.name, q.PIT)
+			Join("join get_account_aggregated_volumes(?, accounts.address, ?, ?) volumes on true", store.name, q.OOT, q.PIT)
 	}
 
 	if q.ExpandEffectiveVolumes {
 		query = query.
 			ColumnExpr("effective_volumes.*").
-			Join("join get_account_aggregated_effective_volumes(?, accounts.address, ?) effective_volumes on true", store.name, q.PIT)
+			Join("join get_account_aggregated_effective_volumes(?, accounts.address, ?, ?) effective_volumes on true", store.name, q.OOT, q.PIT)
 	}
 
 	return query
