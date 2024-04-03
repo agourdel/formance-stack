@@ -44,15 +44,31 @@ func (store *Store) buildAccountQuery(q PITFilterWithVolumes, query *bun.SelectQ
 	}
 
 	if q.ExpandVolumes {
-		query = query.
+		if(q.OOT != nil && !q.OOT.IsZero()){
+			query = query.
 			ColumnExpr("volumes.*").
-			Join("join get_account_aggregated_volumes(?, accounts.address, ?, ?) volumes on true", store.name, q.OOT, q.PIT)
+			Join("join get_naive_account_aggregated_volumes(?, accounts.address, ?, ?) volumes on true", store.name, q.OOT, q.PIT)
+		} else {
+			query = query.
+			ColumnExpr("volumes.*").
+			Join("join get_account_aggregated_volumes(?, accounts.address, ?) volumes on true", store.name, q.PIT)
+		}
+		
+		
 	}
 
 	if q.ExpandEffectiveVolumes {
-		query = query.
+		if(q.OOT != nil && !q.OOT.IsZero()){
+			query = query.
 			ColumnExpr("effective_volumes.*").
-			Join("join get_account_aggregated_effective_volumes(?, accounts.address, ?, ?) effective_volumes on true", store.name, q.OOT, q.PIT)
+			Join("join get_naive_account_aggregated_effective_volumes(?, accounts.address, ?, ?) effective_volumes on true", store.name, q.OOT, q.PIT)
+
+		} else {
+			query = query.
+			ColumnExpr("effective_volumes.*").
+			Join("join get_account_aggregated_effective_volumes(?, accounts.address, ?) effective_volumes on true", store.name, q.PIT)
+		}
+		
 	}
 
 	return query

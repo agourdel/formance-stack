@@ -77,7 +77,6 @@ func (store *Store) GetAggregatedBalances(ctx context.Context, q GetAggregatedBa
 				Apply(filterPIT(q.PIT, pitColumn)).
 				Apply(filterOOT(q.OOT, pitColumn))
 
-
 			if q.UseInsertionDate {
 				moves = moves.Order("moves.insertion_date desc")
 			} else {
@@ -90,10 +89,10 @@ func (store *Store) GetAggregatedBalances(ctx context.Context, q GetAggregatedBa
 					moves = moves.Join(`join lateral (	
 						select metadata
 						from accounts_metadata am 
-						where am.accounts_seq = moves.accounts_seq and (? is null or date <= ?) and (? is null or date >= ?)
+						where am.accounts_seq = moves.accounts_seq and (? is null or date <= ?)
 						order by revision desc 
 						limit 1
-					) am on true`, q.PIT, q.PIT, q.OOT, q.OOT)
+					) am on true`, q.PIT, q.PIT)
 				} else {
 					moves = moves.Join(`join lateral (	
 						select metadata

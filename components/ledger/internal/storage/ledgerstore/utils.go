@@ -172,10 +172,13 @@ func filterPIT(pit *time.Time, column string) func(query *bun.SelectQuery) *bun.
 }
 
 func filterOOT(oot *time.Time, column string) func(query *bun.SelectQuery) *bun.SelectQuery {
+	fmt.Println(column)
+	fmt.Println(oot)
 	return func(query *bun.SelectQuery) *bun.SelectQuery {
 		if oot == nil || oot.IsZero() {
 			return query
 		}
+		
 		return query.Where(fmt.Sprintf("%s >= ?", column), oot)
 	}
 }

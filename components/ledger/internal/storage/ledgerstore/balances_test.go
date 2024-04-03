@@ -1,6 +1,7 @@
 package ledgerstore
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -22,7 +23,15 @@ func TestGetBalancesAggregated(t *testing.T) {
 	now := time.Now()
 	ctx := logging.TestingContext()
 
-	bigInt, _ := big.NewInt(0).SetString("999999999999999999999999999999999999999999999999999999999999999999999999999999999", 10)
+	
+	futur_oot := now.Add(1*time.Minute)
+	futur_pit := now.Add(4*time.Minute)
+	old_oot := now.Add(-4*time.Minute)
+	old_pit := now.Add(-2*time.Minute)
+
+
+	//bigInt, _ := big.NewInt(0).SetString("999999999999999999999999999999999999999999999999999999999999999999999999999999999", 10)
+	bigInt := big.NewInt(500)
 	smallInt := big.NewInt(199)
 
 	tx1 := ledger.NewTransaction().WithPostings(
@@ -36,9 +45,20 @@ func TestGetBalancesAggregated(t *testing.T) {
 		ledger.NewPosting("world", "xxx", "EUR", smallInt),
 	).WithDate(now.Add(-time.Minute)).WithIDUint64(1)
 
+	tx3 := ledger.NewTransaction().
+			WithPostings(ledger.NewPosting("world", "users:1", "USD", big.NewInt(150))).
+			WithDate(now.Add(-2*time.Minute)).WithIDUint64(2)
+	
+	tx4 := ledger.NewTransaction().
+	WithPostings(ledger.NewPosting("world", "users:2", "USD", big.NewInt(75))).
+	WithDate(now.Add(-4*time.Minute)).WithIDUint64(3)
+			
+
 	logs := []*ledger.Log{
 		ledger.NewTransactionLog(tx1, map[string]metadata.Metadata{}).WithDate(now),
 		ledger.NewTransactionLog(tx2, map[string]metadata.Metadata{}).WithDate(now.Add(time.Minute)),
+		ledger.NewTransactionLog(tx3, map[string]metadata.Metadata{}).WithDate(now.Add(2*time.Minute)),
+		ledger.NewTransactionLog(tx4, map[string]metadata.Metadata{}).WithDate(now.Add(3*time.Minute)),
 		ledger.NewSetMetadataLog(now.Add(time.Minute), ledger.SetMetadataLogPayload{
 			TargetType: ledger.MetaTargetTypeAccount,
 			TargetID:   "users:1",
@@ -78,22 +98,22 @@ func TestGetBalancesAggregated(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, ledger.BalancesByAssets{
 			"USD": big.NewInt(0).Add(
-				big.NewInt(0).Mul(bigInt, big.NewInt(2)),
-				big.NewInt(0).Mul(smallInt, big.NewInt(2)),
+				big.NewInt(0).Add(
+					big.NewInt(0).Mul(bigInt, big.NewInt(2)),
+					big.NewInt(0).Mul(smallInt, big.NewInt(2)),
+				),
+				big.NewInt(0).Add(big.NewInt(150), big.NewInt(75) ),
 			),
 		}, ret)
 	})
 	t.Run("using pit on effective date", func(t *testing.T) {
 		t.Parallel()
 		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
-			PIT: pointer.For(now.Add(-time.Second)),
+			PIT: &old_pit,
 		}, query.Match("address", "users:"), false))
 		require.NoError(t, err)
 		require.Equal(t, ledger.BalancesByAssets{
-			"USD": big.NewInt(0).Add(
-				bigInt,
-				smallInt,
-			),
+			"USD": big.NewInt(0).Add(big.NewInt(150),big.NewInt(75)),
 		}, ret)
 	})
 	t.Run("using pit on insertion date", func(t *testing.T) {
@@ -109,11 +129,11 @@ func TestGetBalancesAggregated(t *testing.T) {
 			),
 		}, ret)
 	})
-	t.Run("using a metadata and pit", func(t *testing.T) {
+	t.Run("using a metadata and pit on insertion date", func(t *testing.T) {
 		t.Parallel()
 		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
 			PIT: pointer.For(now.Add(time.Minute)),
-		}, query.Match("metadata[category]", "premium"), false))
+		}, query.Match("metadata[category]", "premium"), true))
 		require.NoError(t, err)
 		require.Equal(t, ledger.BalancesByAssets{
 			"USD": big.NewInt(0).Add(
@@ -128,7 +148,10 @@ func TestGetBalancesAggregated(t *testing.T) {
 			query.Match("metadata[category]", "premium"), false))
 		require.NoError(t, err)
 		require.Equal(t, ledger.BalancesByAssets{
-			"USD": big.NewInt(0).Mul(bigInt, big.NewInt(2)),
+			"USD": big.NewInt(0).Add(
+				big.NewInt(0).Mul(bigInt, big.NewInt(2)),
+				big.NewInt(150),
+			),
 		}, ret)
 	})
 	t.Run("when no matching", func(t *testing.T) {
@@ -137,5 +160,70 @@ func TestGetBalancesAggregated(t *testing.T) {
 			query.Match("metadata[category]", "guest"), false))
 		require.NoError(t, err)
 		require.Equal(t, ledger.BalancesByAssets{}, ret)
+	})
+
+	t.Run("using an oot on insertion date", func(t *testing.T) {
+		t.Parallel()
+		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
+			OOT : &futur_oot,
+		},
+		query.Match("address", "users:"), true))
+		require.NoError(t, err)
+		require.Equal(t, ledger.BalancesByAssets{
+			"USD": big.NewInt(0).Add(
+				big.NewInt(0).Add(bigInt, smallInt),
+				big.NewInt(225),
+			),
+		}, ret)
+	})
+
+	t.Run("using an oot on effective date", func(t *testing.T) {
+		t.Parallel()
+		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
+			OOT: &old_pit,
+		},
+		query.Match("address", "users:"), false))
+		require.NoError(t, err)
+		require.Equal(t, ledger.BalancesByAssets{
+			"USD": big.NewInt(0).Add(
+				big.NewInt(0).Add(big.NewInt(0).Mul(bigInt, big.NewInt(2)),big.NewInt(0).Mul(smallInt, big.NewInt(2))),
+				big.NewInt(150),
+			),
+		}, ret)
+	})
+
+	t.Run("using an oot and pit on insertion date", func(t *testing.T) {
+		t.Parallel()
+		fmt.Println("Insertion date")
+		fmt.Println(fmt.Printf("oot %s", futur_oot))
+		fmt.Println(fmt.Printf("pit %s", futur_pit))
+		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
+			OOT: &futur_oot,
+			PIT: &futur_pit,
+		},
+		query.Match("address", "users:"), true))
+		require.NoError(t, err)
+		require.Equal(t, ledger.BalancesByAssets{
+			"USD": big.NewInt(0).Add(
+				big.NewInt(0).Add(bigInt, smallInt),
+				big.NewInt(225),
+			),
+		}, ret)
+	})
+
+	t.Run("using an oot and pit on effective date", func(t *testing.T) {
+		t.Parallel()
+		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
+			OOT: &old_oot,
+			PIT: &old_pit,
+		},
+		query.Match("address", "users:"), false))
+		require.NoError(t, err)
+		require.Equal(t, ledger.BalancesByAssets{
+			"USD": big.NewInt(0).Add(
+				big.NewInt(75),
+				big.NewInt(150),
+			),
+		}, ret)
 	})
 }
