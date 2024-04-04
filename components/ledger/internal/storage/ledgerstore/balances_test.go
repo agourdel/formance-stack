@@ -25,6 +25,7 @@ func TestGetBalancesAggregated(t *testing.T) {
 
 	
 	futur_oot := now.Add(1*time.Minute)
+	futur_oot2 := now.Add(2*time.Minute)
 	futur_pit := now.Add(4*time.Minute)
 	old_oot := now.Add(-4*time.Minute)
 	old_pit := now.Add(-2*time.Minute)
@@ -199,7 +200,7 @@ func TestGetBalancesAggregated(t *testing.T) {
 		fmt.Println(fmt.Printf("pit %s", futur_pit))
 		ret, err := store.GetAggregatedBalances(ctx, NewGetAggregatedBalancesQuery(PITFilter{
 			OOT: &futur_oot,
-			PIT: &futur_pit,
+			PIT: &futur_oot2,
 		},
 		query.Match("address", "users:"), true))
 		require.NoError(t, err)
