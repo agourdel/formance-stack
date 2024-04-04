@@ -150,6 +150,7 @@ type GetAggregatedBalanceQuery struct {
 	UseInsertionDate bool
 }
 
+
 func NewGetAggregatedBalancesQuery(filter PITFilter, qb query.Builder, useInsertionDate bool) GetAggregatedBalanceQuery {
 	return GetAggregatedBalanceQuery{
 		PITFilter:        filter,
