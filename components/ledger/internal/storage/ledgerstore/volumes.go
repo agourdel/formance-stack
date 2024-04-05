@@ -9,13 +9,12 @@ import (
 	"github.com/uptrace/bun"
 )
 
-
 func (store *Store) volumesQueryContext(qb lquery.Builder, q GetVolumesWithBalancesQuery) (string, []any, error) {
-	 
+
 	var (
-		subQuery     string
-		args         []any
-		err          error
+		subQuery string
+		args     []any
+		err      error
 	)
 
 	if q.Options.QueryBuilder != nil {
@@ -56,47 +55,44 @@ func (store *Store) volumesQueryContext(qb lquery.Builder, q GetVolumesWithBalan
 
 }
 
+func (store *Store) buildVolumesWithBalancesQuery(query *bun.SelectQuery, q GetVolumesWithBalancesQuery, where string, args []any) *bun.SelectQuery {
+func (store *Store) buildVolumesWithBalancesQuery(query *bun.SelectQuery, q GetVolumesWithBalancesQuery, where string, args []any) *bun.SelectQuery {
 
-func (store *Store) buildVolumesWithBalancesQuery(query *bun.SelectQuery, q GetVolumesWithBalancesQuery, where string, args []any) (*bun.SelectQuery) {
-	
-	
-	
 	pitFilter := q.Options.Options
 	dateFilterColumn := "effective_date"
 
-	if(pitFilter.UseInsertionDate){
+	if pitFilter.UseInsertionDate {
 		dateFilterColumn = "insertion_date"
 	}
 
 	query = query.
-	ColumnExpr("account_address as account").
-	Column("asset").
-	ColumnExpr("sum(case when not is_source then amount else 0 end) as input").
-	ColumnExpr("sum(case when is_source then amount else 0 end) as output").
-	ColumnExpr("sum(case when not is_source then amount else -amount end) as balance").
-	Table("moves")
+		ColumnExpr("account_address as account").
+		Column("asset").
+		ColumnExpr("sum(case when not is_source then amount else 0 end) as input").
+		ColumnExpr("sum(case when is_source then amount else 0 end) as output").
+		ColumnExpr("sum(case when not is_source then amount else -amount end) as balance").
+		Table("moves")
 
-	if where != ""{
+	if where != "" {
 		query = query.
-		Join(`join lateral (	
+			Join(`join lateral (	
 			select metadata
 			from accounts a 
 			where a.seq = moves.accounts_seq
 		) accounts on true`).
-		Where(where, args...)
+			Where(where, args...)
 	}
-	
 
 	query = query.
-	Where("ledger = ?", store.name). 
-	Apply(filterPIT(pitFilter.PIT, dateFilterColumn)).
-	Apply(filterOOT(pitFilter.OOT, dateFilterColumn)).
-	GroupExpr("account_address, asset")
+		Where("ledger = ?", store.name).
+		Apply(filterPIT(pitFilter.PIT, dateFilterColumn)).
+		Apply(filterOOT(pitFilter.OOT, dateFilterColumn)).
+		GroupExpr("account_address, asset")
 
 	return query
 }
 
-func (store *Store) GetVolumesWithBalances(ctx context.Context, q GetVolumesWithBalancesQuery) (*bunpaginate.Cursor[ledger.VolumesWithBalanceByAssetByAccount], error){
+func (store *Store) GetVolumesWithBalances(ctx context.Context, q GetVolumesWithBalancesQuery) (*bunpaginate.Cursor[ledger.VolumesWithBalanceByAssetByAccount], error) {
 	var (
 		where string
 		args  []any
@@ -109,18 +105,15 @@ func (store *Store) GetVolumesWithBalances(ctx context.Context, q GetVolumesWith
 		}
 	}
 
-
-
 	return paginateWithOffsetWithoutModel[PaginatedQueryOptions[PITFilterForVolumes], ledger.VolumesWithBalanceByAssetByAccount](
 		store, ctx, (*bunpaginate.OffsetPaginatedQuery[PaginatedQueryOptions[PITFilterForVolumes]])(&q),
-		func(query *bun.SelectQuery) (*bun.SelectQuery) {
+		func(query *bun.SelectQuery) *bun.SelectQuery {
 			return store.buildVolumesWithBalancesQuery(query, q, where, args)
 		},
 	)
 }
 
 type GetVolumesWithBalancesQuery bunpaginate.OffsetPaginatedQuery[PaginatedQueryOptions[PITFilterForVolumes]]
-
 
 func NewGetVolumesWithBalancesQuery(opts PaginatedQueryOptions[PITFilterForVolumes]) GetVolumesWithBalancesQuery {
 	return GetVolumesWithBalancesQuery{

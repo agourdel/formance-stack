@@ -12,11 +12,11 @@ import (
 	"github.com/formancehq/stack/libs/go-libs/bun/bunpaginate"
 )
 
-func getVolumesWithBalances(w http.ResponseWriter, r *http.Request){
+func getVolumesWithBalances(w http.ResponseWriter, r *http.Request) {
 
 	l := backend.LedgerFromContext(r.Context())
-	
-	query, err := bunpaginate.Extract[ledgerstore.GetVolumesWithBalancesQuery](r, func() (*ledgerstore.GetVolumesWithBalancesQuery, error){
+
+	query, err := bunpaginate.Extract[ledgerstore.GetVolumesWithBalancesQuery](r, func() (*ledgerstore.GetVolumesWithBalancesQuery, error) {
 		options, err := getPaginatedQueryOptionsOfPITOOTFilterForVolumes(r)
 		if err != nil {
 			sharedapi.BadRequest(w, ErrValidation, err)
@@ -30,7 +30,6 @@ func getVolumesWithBalances(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	
 	cursor, err := l.GetVolumesWithBalances(r.Context(), *query)
 
 	if err != nil {

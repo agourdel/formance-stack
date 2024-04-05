@@ -50,7 +50,7 @@ func paginateWithOffset[FILTERS any, RETURN any](s *Store, ctx context.Context,
 	//if query.GetModel() == nil && query.GetTableName() == "" {
 	//	query = query.Model(ret)
 	//}
-	
+
 	return bunpaginate.UsingOffset[FILTERS, RETURN](ctx, query, *q)
 }
 
@@ -65,7 +65,7 @@ func paginateWithOffsetWithoutModel[FILTERS any, RETURN any](s *Store, ctx conte
 	//if query.GetModel() == nil && query.GetTableName() == "" {
 	//	query = query.Model(ret)
 	//}
-	
+
 	return bunpaginate.UsingOffsetWithoutModel[FILTERS, RETURN](ctx, query, *q)
 }
 
@@ -195,8 +195,6 @@ func filterOOT(oot *time.Time, column string) func(query *bun.SelectQuery) *bun.
 	}
 }
 
-
-
 type PaginatedQueryOptions[T any] struct {
 	QueryBuilder query.Builder `json:"qb"`
 	PageSize     uint64        `json:"pageSize"`
@@ -260,7 +258,7 @@ type PITFilterWithVolumes struct {
 	ExpandEffectiveVolumes bool `json:"effectiveVolumes"`
 }
 
-type PITFilterForVolumes struct{
+type PITFilterForVolumes struct {
 	PITFilter
-	UseInsertionDate	bool
+	UseInsertionDate bool
 }

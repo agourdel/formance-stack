@@ -60,7 +60,6 @@ func UsingOffset[Q any, T any](ctx context.Context, sb *bun.SelectQuery, query O
 func UsingOffsetWithoutModel[Q any, T any](ctx context.Context, sb *bun.SelectQuery, query OffsetPaginatedQuery[Q], builders ...func(query *bun.SelectQuery) *bun.SelectQuery) (*Cursor[T], error) {
 	ret := make([]T, 0)
 
-	
 	for _, builder := range builders {
 		sb = sb.Apply(builder)
 	}

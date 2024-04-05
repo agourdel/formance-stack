@@ -66,9 +66,9 @@ func NewVolumesInt64(input, output int64) *Volumes {
 
 type VolumesWithBalanceByAssetByAccount struct {
 	Account string `json:"account" bun:"account"`
-	Asset string  `json:"asset" bun:"asset"`
-	VolumesWithBalance 
-}	
+	Asset   string `json:"asset" bun:"asset"`
+	VolumesWithBalance
+}
 
 type VolumesWithBalance struct {
 	Input   *big.Int `json:"input" bun:"input"`

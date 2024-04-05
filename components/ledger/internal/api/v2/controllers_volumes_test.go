@@ -2,12 +2,13 @@ package v2_test
 
 import (
 	"bytes"
+	"github.com/formancehq/stack/libs/go-libs/time"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"github.com/formancehq/stack/libs/go-libs/time"
+
 
 	"github.com/formancehq/stack/libs/go-libs/auth"
 	"github.com/formancehq/stack/libs/go-libs/bun/bunpaginate"
@@ -42,8 +43,8 @@ func TestGetVolumes(t *testing.T) {
 			name: "basic",
 			expectQuery: ledgerstore.NewPaginatedQueryOptions(ledgerstore.PITFilterForVolumes{
 				PITFilter: ledgerstore.PITFilter{
-					PIT:&before,
-					OOT:&zero,
+					PIT: &before,
+					OOT: &zero,
 				},
 			}).
 				WithPageSize(v2.DefaultPageSize),
@@ -53,8 +54,8 @@ func TestGetVolumes(t *testing.T) {
 			body: `{"$match": { "metadata[roles]": "admin" }}`,
 			expectQuery: ledgerstore.NewPaginatedQueryOptions(ledgerstore.PITFilterForVolumes{
 				PITFilter: ledgerstore.PITFilter{
-					PIT:&before,
-					OOT:&zero,
+					PIT: &before,
+					OOT: &zero,
 				},
 			}).
 				WithQueryBuilder(query.Match("metadata[roles]", "admin")).
@@ -65,8 +66,8 @@ func TestGetVolumes(t *testing.T) {
 			body: `{"$match": { "address": "foo" }}`,
 			expectQuery: ledgerstore.NewPaginatedQueryOptions(ledgerstore.PITFilterForVolumes{
 				PITFilter: ledgerstore.PITFilter{
-					PIT:&before,
-					OOT:&zero,
+					PIT: &before,
+					OOT: &zero,
 				},
 			}).
 				WithQueryBuilder(query.Match("address", "foo")).
@@ -91,14 +92,13 @@ func TestGetVolumes(t *testing.T) {
 			expectedCursor := bunpaginate.Cursor[ledger.VolumesWithBalanceByAssetByAccount]{
 				Data: []ledger.VolumesWithBalanceByAssetByAccount{
 					{
-						Account : "user:1",
-						Asset: "eur",
+						Account: "user:1",
+						Asset:   "eur",
 						VolumesWithBalance: ledger.VolumesWithBalance{
-							Input:big.NewInt(1),
-							Output: big.NewInt(1),
+							Input:   big.NewInt(1),
+							Output:  big.NewInt(1),
 							Balance: big.NewInt(0),
 						},
-
 					},
 				},
 			}
@@ -106,7 +106,7 @@ func TestGetVolumes(t *testing.T) {
 			backend, mockLedger := newTestingBackend(t, true)
 			if testCase.expectStatusCode < 300 && testCase.expectStatusCode >= 200 {
 				mockLedger.EXPECT().
-				GetVolumesWithBalances(gomock.Any(), ledgerstore.NewGetVolumesWithBalancesQuery(testCase.expectQuery)).
+					GetVolumesWithBalances(gomock.Any(), ledgerstore.NewGetVolumesWithBalancesQuery(testCase.expectQuery)).
 					Return(&expectedCursor, nil)
 			}
 

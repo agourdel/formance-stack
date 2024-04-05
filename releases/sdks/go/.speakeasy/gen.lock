@@ -1,12 +1,12 @@
 lockVersion: 2.0.0
 id: 7eac0a45-60a2-40bb-9e85-26bd77ec2a6d
 management:
-  docChecksum: 8501dcc6098570928e5740ce480516da
+  docChecksum: caf6b74fe25f6b32b3533f420d778790
   docVersion: v0.0.0
   speakeasyVersion: internal
   generationVersion: 2.237.2
-  releaseVersion: v0.0.0
-  configChecksum: 50130ac1de5d0825ab31d45fbe3aac35
+  releaseVersion: 0.0.1
+  configChecksum: c299152255ec1caf1aad2b6fbca6bdc9
 features:
   go:
     constsAndDefaults: 0.1.2
@@ -94,6 +94,7 @@ generatedFiles:
   - /pkg/models/operations/v2getledger.go
   - /pkg/models/operations/v2getledgerinfo.go
   - /pkg/models/operations/v2gettransaction.go
+  - /pkg/models/operations/v2getvolumeswithbalances.go
   - /pkg/models/operations/v2listaccounts.go
   - /pkg/models/operations/v2listledgers.go
   - /pkg/models/operations/v2listlogs.go
@@ -286,6 +287,8 @@ generatedFiles:
   - /pkg/models/shared/v2migrationinfo.go
   - /pkg/models/shared/v2gettransactionresponse.go
   - /pkg/models/shared/v2expandedtransaction.go
+  - /pkg/models/shared/v2volumeswithbalancecursorresponse.go
+  - /pkg/models/shared/v2volumeswithbalance.go
   - /pkg/models/shared/v2accountscursorresponse.go
   - /pkg/models/shared/v2ledgerlistresponse.go
   - /pkg/models/shared/v2logscursorresponse.go
@@ -636,6 +639,8 @@ generatedFiles:
   - docs/pkg/models/operations/v2getledgerinforesponse.md
   - docs/pkg/models/operations/v2gettransactionrequest.md
   - docs/pkg/models/operations/v2gettransactionresponse.md
+  - docs/pkg/models/operations/v2getvolumeswithbalancesrequest.md
+  - docs/pkg/models/operations/v2getvolumeswithbalancesresponse.md
   - docs/pkg/models/operations/v2listaccountsrequest.md
   - docs/pkg/models/operations/v2listaccountsresponse.md
   - docs/pkg/models/operations/v2listledgersrequest.md
@@ -944,6 +949,9 @@ generatedFiles:
   - docs/pkg/models/shared/v2migrationinfo.md
   - docs/pkg/models/shared/v2gettransactionresponse.md
   - docs/pkg/models/shared/v2expandedtransaction.md
+  - docs/pkg/models/shared/v2volumeswithbalancecursorresponsecursor.md
+  - docs/pkg/models/shared/v2volumeswithbalancecursorresponse.md
+  - docs/pkg/models/shared/v2volumeswithbalance.md
   - docs/pkg/models/shared/v2accountscursorresponsecursor.md
   - docs/pkg/models/shared/v2accountscursorresponse.md
   - docs/pkg/models/shared/v2ledgerlistresponsecursor.md

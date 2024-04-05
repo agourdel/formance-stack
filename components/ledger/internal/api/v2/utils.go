@@ -9,10 +9,10 @@ import (
 	"github.com/formancehq/stack/libs/go-libs/bun/bunpaginate"
 
 	"github.com/formancehq/ledger/internal/storage/ledgerstore"
+	sharedapi "github.com/formancehq/stack/libs/go-libs/api"
 	"github.com/formancehq/stack/libs/go-libs/collectionutils"
 	"github.com/formancehq/stack/libs/go-libs/pointer"
 	"github.com/formancehq/stack/libs/go-libs/query"
-	sharedapi "github.com/formancehq/stack/libs/go-libs/api"
 )
 
 func getPITOOTFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
@@ -26,12 +26,12 @@ func getPITOOTFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
 		var err error
 		pit, err = time.ParseTime(pitString)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 	}
 
 	if ootString != "" {
-		var err error 
+		var err error
 		oot, err = time.ParseTime(ootString)
 		if err != nil {
 			return nil, err
@@ -44,7 +44,6 @@ func getPITOOTFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
 	}, nil
 }
 
-
 func getPITFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
 	pitString := r.URL.Query().Get("pit")
 
@@ -54,7 +53,7 @@ func getPITFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
 		var err error
 		pit, err = time.ParseTime(pitString)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 	}
 
@@ -84,7 +83,7 @@ func getPITOOTFilterForVolumes(r *http.Request) (*ledgerstore.PITFilterForVolume
 	UseInsertionDate := sharedapi.QueryParamBool(r, "use_insertion_date")
 
 	return &ledgerstore.PITFilterForVolumes{
-		PITFilter: *pit,
+		PITFilter:        *pit,
 		UseInsertionDate: UseInsertionDate,
 	}, nil
 }
@@ -127,7 +126,7 @@ func getPaginatedQueryOptionsOfPITOOTFilterForVolumes(r *http.Request) (*ledgers
 	if err != nil {
 		return nil, err
 	}
-	
+
 	pitFilter, err := getPITOOTFilterForVolumes(r)
 	if err != nil {
 		return nil, err
@@ -139,6 +138,6 @@ func getPaginatedQueryOptionsOfPITOOTFilterForVolumes(r *http.Request) (*ledgers
 	}
 
 	return pointer.For(ledgerstore.NewPaginatedQueryOptions(*pitFilter).
-	WithPageSize(pageSize).
-	WithQueryBuilder(qb)), nil
+		WithPageSize(pageSize).
+		WithQueryBuilder(qb)), nil
 }
