@@ -1338,7 +1338,7 @@ components:
               items:
                 $ref: '#/components/schemas/V2VolumesWithBalance'
     
-     V2VolumesWithBalance:
+    V2VolumesWithBalance:
       type: object
       properties:
         account:
