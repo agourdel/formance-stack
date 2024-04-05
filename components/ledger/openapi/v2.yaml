@@ -1346,11 +1346,11 @@ components:
         asset:
           type: string
         input:
-          type: int64
+          type: integer
         output:
-          type: int64 
+          type: integer 
         balance:
-          type: int64
+          type: integer
       required:
         - account
         - asset
