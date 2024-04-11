@@ -101,8 +101,6 @@ type BalancesByAssets map[string]*big.Int
 
 type VolumesByAssets map[string]*Volumes
 
-type BalancesByAssetsByAccounts map[string]BalancesByAssets
-
 func (v VolumesByAssets) Balances() BalancesByAssets {
 	balances := BalancesByAssets{}
 	for asset, vv := range v {
@@ -118,6 +116,24 @@ func (v VolumesByAssets) copy() VolumesByAssets {
 	}
 	return ret
 }
+
+type BalancesByAssetsByAccounts map[string]BalancesByAssets
+
+type VolumesByAssetsByAccounts map[string]VolumesByAssets
+
+func (v VolumesByAssetsByAccounts) Balances() BalancesByAssetsByAccounts {
+	balancesByAA := BalancesByAssetsByAccounts{} // balancesByAA ==> balancesByAssetByAccounts
+	for account, vByAsset := range v {
+		balancesByAA[account] = vByAsset.Balances()
+	}
+
+	return balancesByAA
+}
+
+
+
+
+
 
 type AccountsAssetsVolumes map[string]VolumesByAssets
 

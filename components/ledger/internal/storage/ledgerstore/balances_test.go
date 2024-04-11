@@ -138,4 +138,24 @@ func TestGetBalancesAggregated(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, ledger.BalancesByAssets{}, ret)
 	})
+
+	t.Run("Test V2 aggregation by segment level", func(t *testing.T) {
+		t.Parallel()
+
+		getAggregatedBalanceQuery := NewGetAggregatedBalancesQuery(PITFilter{}, query.Match("address", "users:"), false)
+		getAggregatedBalanceQuery.GroupLvl = 0
+
+		ret, err := store.V2GetAggregatedBalances(ctx, getAggregatedBalanceQuery)
+
+		require.NoError(t, err)
+		require.Equal(t, ledger.BalancesByAssetsByAccounts{
+			"users" : ledger.BalancesByAssets{
+				"USD": big.NewInt(0).Add(
+					big.NewInt(0).Mul(bigInt, big.NewInt(2)),
+					big.NewInt(0).Mul(smallInt, big.NewInt(2)),
+				),
+			},
+		}, ret)
+		
+	})
 }
