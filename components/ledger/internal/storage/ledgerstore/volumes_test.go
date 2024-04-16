@@ -514,4 +514,71 @@ func TestAggGetVolumesWithBalances(t *testing.T) {
 		})
 	})
 
+	t.Run("Aggregation Volumes with Balance for GroupLvl 1 && PIT && OOT && effectiveDate && Balances[ASSET] filter", func(t *testing.T) {
+		t.Parallel()
+		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(
+			NewPaginatedQueryOptions(
+				FiltersForVolumes{
+					PITFilter: PITFilter{
+						PIT: &futur_pit,
+						OOT: &previous_oot,
+					},
+					UseInsertionDate: false,
+					GroupLvl:         1,
+				}).WithQueryBuilder(
+					query.And(query.Match("account", "account::"), query.Gte("balance[EUR]", 50)))))
+
+		require.NoError(t, err)
+		require.Len(t, volumes.Data, 1)
+		require.Equal(t, volumes.Data[0], ledger.VolumesWithBalanceByAssetByAccount{
+			Account: "account",
+			Asset:   "EUR",
+			VolumesWithBalance: ledger.VolumesWithBalance{
+				Input:   big.NewInt(50),
+				Output:  big.NewInt(0),
+				Balance: big.NewInt(50),
+			},
+		})
+	})
+
+	t.Run("Aggregation Volumes with Balance for GroupLvl 1 && PIT && OOT && effectiveDate && Balances[ASSET] filter 2", func(t *testing.T) {
+		t.Parallel()
+		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(
+			NewPaginatedQueryOptions(
+				FiltersForVolumes{
+					PITFilter: PITFilter{
+						PIT: &futur_pit,
+						OOT: &previous_oot,
+					},
+					UseInsertionDate: false,
+					GroupLvl:         1,
+				}).WithQueryBuilder(
+					query.And(
+						query.Match("account", "account::"), 
+						query.Or(
+							query.Lte("balance[EUR]", 80),
+							query.Gte("balance[USD]", 80),
+						)))))
+
+		require.NoError(t, err)
+		require.Len(t, volumes.Data, 2)
+		require.Equal(t, volumes.Data[0], ledger.VolumesWithBalanceByAssetByAccount{
+			Account: "account",
+			Asset:   "EUR",
+			VolumesWithBalance: ledger.VolumesWithBalance{
+				Input:   big.NewInt(50),
+				Output:  big.NewInt(0),
+				Balance: big.NewInt(50),
+			},
+		})
+		require.Equal(t, volumes.Data[1], ledger.VolumesWithBalanceByAssetByAccount{
+			Account: "account",
+			Asset:   "USD",
+			VolumesWithBalance: ledger.VolumesWithBalance{
+				Input:   big.NewInt(100),
+				Output:  big.NewInt(0),
+				Balance: big.NewInt(100),
+			},
+		})
+	})
 }

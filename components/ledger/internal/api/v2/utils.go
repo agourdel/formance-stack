@@ -19,8 +19,8 @@ func getPITOOTFilter(r *http.Request) (*ledgerstore.PITFilter, error) {
 	pitString := r.URL.Query().Get("endTime")
 	ootString := r.URL.Query().Get("startTime")
 
-	pit := time.Now()
-	oot := time.Time{}
+	var pit time.Time
+	var oot time.Time
 
 	if pitString != "" {
 		var err error
