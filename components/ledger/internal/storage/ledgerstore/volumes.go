@@ -33,6 +33,10 @@ type filter struct {
 	args 		[]any
 }
 
+func (f *filter) IsEmpty() bool {
+	return f.condition == ""
+}
+
 func (f *filter) Clean(){
 	
 	startRegex := regexp.MustCompile(`^\s*(and|or)`) // Start by space(s) then 'and|or'
@@ -49,16 +53,16 @@ func (f *filter) Clean(){
 	f.condition = emptyRegex.ReplaceAllString(f.condition, "")
 }
 
-func getAddressFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery) (filter, error){
+func getAddressFilter(queryBuilder lquery.Builder) (filter, error){
 	var (
 		subQuery string
 		args     []any
 		err      error
 	)
 
-	if q.Options.QueryBuilder != nil {
+	if queryBuilder != nil {
 		
-		subQuery, args, err = q.Options.QueryBuilder.Build(lquery.ContextFn(func(key, operator string, value any) (string, []any, error) {
+		subQuery, args, err = queryBuilder.Build(lquery.ContextFn(func(key, operator string, value any) (string, []any, error) {
 			switch {
 			case key == "account":
 				// TODO: Should allow comparison operator only if segments not used
@@ -83,15 +87,15 @@ func getAddressFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery) (filter,
 
 }
 
-func getMetadataFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery) (filter, error){
+func getMetadataFilter(queryBuilder lquery.Builder) (filter, error){
 	var (
 		subQuery string
 		args     []any
 		err      error
 	)
 
-	if q.Options.QueryBuilder != nil {
-		subQuery, args, err = q.Options.QueryBuilder.Build(lquery.ContextFn(func(key, operator string, value any) (string, []any, error) {
+	if queryBuilder != nil {
+		subQuery, args, err = queryBuilder.Build(lquery.ContextFn(func(key, operator string, value any) (string, []any, error) {
 			switch {
 			case metadataRegex.Match([]byte(key)):
 				if operator != "$match" {
@@ -114,7 +118,7 @@ func getMetadataFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery) (filter
 
 }
 
-func getBalancesAndAssetFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery)(filter, error){
+func getBalancesAndAssetFilter(queryBuilder lquery.Builder)(filter, error){
 	
 	balanceRegex := regexp.MustCompile("balance\\[(.*)\\]")
 	
@@ -124,9 +128,9 @@ func getBalancesAndAssetFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery)
 		err      error
 	)
 
-	if q.Options.QueryBuilder != nil {
+	if queryBuilder != nil {
 		
-		subQuery, args, err = q.Options.QueryBuilder.Build(lquery.ContextFn(func(key, operator string, value any) (string, []any, error) {
+		subQuery, args, err = queryBuilder.Build(lquery.ContextFn(func(key, operator string, value any) (string, []any, error) {
 			switch {
 			case balanceRegex.Match([]byte(key)):
 				match := balanceRegex.FindAllStringSubmatch(key, 2)
@@ -148,51 +152,47 @@ func getBalancesAndAssetFilter(qb lquery.Builder, q GetVolumesWithBalancesQuery)
 func (store *Store) buildVolumesWithBalancesQuery(query *bun.SelectQuery, q GetVolumesWithBalancesQuery, filterAddress filter, filterMetadata filter, filterBalancesAndAsset filter) *bun.SelectQuery {
 
 	filtersForVolumes := q.Options.Options
+	
 	dateFilterColumn := "effective_date"
+	accountColumnExpr := "account_address as account"
+	
+	if filtersForVolumes.UseInsertionDate { dateFilterColumn = "insertion_date"}
+	if filtersForVolumes.GroupLvl > 0 {
+		accountColumnExpr = fmt.
+		Sprintf(`(array_to_string((string_to_array(account_address, ':'))[1:LEAST(array_length(string_to_array(account_address, ':'),1),%d)],':')) as account`, filtersForVolumes.GroupLvl)	
+	} 
 
-	if filtersForVolumes.UseInsertionDate {
-		dateFilterColumn = "insertion_date"
-	}
 
 	query = query.
 		Column("asset").
 		ColumnExpr("sum(case when not is_source then amount else 0 end) as input").
 		ColumnExpr("sum(case when is_source then amount else 0 end) as output").
 		ColumnExpr("sum(case when not is_source then amount else -amount end) as balance").
+		ColumnExpr(accountColumnExpr).
 		Table("moves"). 
 		Where("ledger = ?", store.name).
 		Apply(filterPIT(filtersForVolumes.PIT, dateFilterColumn)).
 		Apply(filterOOT(filtersForVolumes.OOT, dateFilterColumn)).
 		GroupExpr("account, asset")
 
-	
-	if filtersForVolumes.GroupLvl > 0 {
-		query = query.ColumnExpr(fmt.Sprintf(`(array_to_string((string_to_array(account_address, ':'))[1:LEAST(array_length(string_to_array(account_address, ':'),1),%d)],':')) as account`, filtersForVolumes.GroupLvl))
-	} else {
-		query = query.ColumnExpr("account_address as account")
-	}
 
-	if filterAddress.condition != "" {
+	if !filterAddress.IsEmpty() {
 		query = query.Where(filterAddress.condition, filterAddress.args...)
 	}
 
-	if filterMetadata.condition != "" {
+	if !filterMetadata.IsEmpty() {
 		query = query.
 		ColumnExpr("acc.metadata as metadata").
 		Join("left join account as acc").JoinOn("acc.seq = moves.accounts_seq"). 
 		Where(filterMetadata.condition, filterMetadata.args...)		
 	}
 		
-	if filterBalancesAndAsset.condition != ""{
+	if !filterBalancesAndAsset.IsEmpty(){
 		assets := make([]string, len(filterBalancesAndAsset.args)) 
-		for i,v := range filterBalancesAndAsset.args {
-			if (i%2>0){
-				assets = append(assets, v.(string))
-			}
+		for i,v := range filterBalancesAndAsset.args { 
+			if (i%2>0){assets = append(assets, v.(string))}
 		}
-
-		query = query.
-		Where("asset IN (?)", bun.In(assets)).
+		query = query.Where("asset IN (?)", bun.In(assets)).
 		Having(filterBalancesAndAsset.condition, filterBalancesAndAsset.args...)
 	}
 	
@@ -201,18 +201,23 @@ func (store *Store) buildVolumesWithBalancesQuery(query *bun.SelectQuery, q GetV
 
 func (store *Store) GetVolumesWithBalances(ctx context.Context, q GetVolumesWithBalancesQuery) (*bunpaginate.Cursor[ledger.VolumesWithBalanceByAssetByAccount], error) {
 	var err error
-	filterAddress, filterMetadata, filterBalancesAndAsset := filter{condition:"", args:nil}, filter{condition:"", args:nil}, filter{condition:"", args:nil}
+	filterAddress, 
+	filterMetadata, 
+	filterBalancesAndAsset := 	filter{condition:"", args:nil}, 
+								filter{condition:"", args:nil}, 
+								filter{condition:"", args:nil}
 	 
 	
 	if q.Options.QueryBuilder != nil {
-		filterAddress, err = getAddressFilter(q.Options.QueryBuilder, q)
+		filterAddress, err = getAddressFilter(q.Options.QueryBuilder)
 		filterAddress.Clean()
 		if err != nil { return nil, err}
-		filterMetadata, err = getMetadataFilter(q.Options.QueryBuilder, q)
+		filterMetadata, err = getMetadataFilter(q.Options.QueryBuilder)
 		filterMetadata.Clean()
 		if err != nil { return nil, err}
-		filterBalancesAndAsset, err = getBalancesAndAssetFilter(q.Options.QueryBuilder, q)
+		filterBalancesAndAsset, err = getBalancesAndAssetFilter(q.Options.QueryBuilder)
 		filterBalancesAndAsset.Clean()
+		if err != nil { return nil, err}
 	}
 
 	return paginateWithOffsetWithoutModel[PaginatedQueryOptions[FiltersForVolumes], ledger.VolumesWithBalanceByAssetByAccount](

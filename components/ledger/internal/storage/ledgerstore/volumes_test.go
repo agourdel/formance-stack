@@ -20,11 +20,11 @@ func TestGetVolumesWithBalances(t *testing.T) {
 	now := time.Now()
 	ctx := logging.TestingContext()
 
-	previous_pit := now.Add(-2 * time.Minute)
-	futur_pit := now.Add(2 * time.Minute)
+	previousPIT := now.Add(-2 * time.Minute)
+	futurPIT := now.Add(2 * time.Minute)
 
-	previous_oot := now.Add(-2 * time.Minute)
-	futur_oot := now.Add(2 * time.Minute)
+	previousOOT := now.Add(-2 * time.Minute)
+	futurOOT := now.Add(2 * time.Minute)
 
 	require.NoError(t, store.InsertLogs(ctx,
 		ledger.ChainLogs(
@@ -113,7 +113,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &previous_pit, OOT: nil},
+				PITFilter:        PITFilter{PIT: &previousPIT, OOT: nil},
 				UseInsertionDate: true,
 			})))
 
@@ -134,7 +134,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &futur_pit, OOT: nil},
+				PITFilter:        PITFilter{PIT: &futurPIT, OOT: nil},
 				UseInsertionDate: true,
 			})))
 		require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: nil, OOT: &previous_oot},
+				PITFilter:        PITFilter{PIT: nil, OOT: &previousOOT},
 				UseInsertionDate: true,
 			})))
 		require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: nil, OOT: &futur_oot},
+				PITFilter:        PITFilter{PIT: nil, OOT: &futurOOT},
 				UseInsertionDate: true,
 			})))
 
@@ -179,7 +179,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &previous_pit, OOT: nil},
+				PITFilter:        PITFilter{PIT: &previousPIT, OOT: nil},
 				UseInsertionDate: false,
 			})))
 
@@ -200,7 +200,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &futur_pit, OOT: nil},
+				PITFilter:        PITFilter{PIT: &futurPIT, OOT: nil},
 				UseInsertionDate: false,
 			})))
 		require.NoError(t, err)
@@ -212,7 +212,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: nil, OOT: &previous_oot},
+				PITFilter:        PITFilter{PIT: nil, OOT: &previousOOT},
 				UseInsertionDate: false,
 			})))
 		require.NoError(t, err)
@@ -224,7 +224,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: nil, OOT: &futur_oot},
+				PITFilter:        PITFilter{PIT: nil, OOT: &futurOOT},
 				UseInsertionDate: false,
 			})))
 
@@ -245,7 +245,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &futur_pit, OOT: &now},
+				PITFilter:        PITFilter{PIT: &futurPIT, OOT: &now},
 				UseInsertionDate: true,
 			})))
 
@@ -267,7 +267,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &now, OOT: &previous_oot},
+				PITFilter:        PITFilter{PIT: &now, OOT: &previousOOT},
 				UseInsertionDate: true,
 			})))
 
@@ -289,7 +289,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &futur_pit, OOT: &now},
+				PITFilter:        PITFilter{PIT: &futurPIT, OOT: &now},
 				UseInsertionDate: false,
 			})))
 
@@ -310,7 +310,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 		t.Parallel()
 		volumes, err := store.GetVolumesWithBalances(ctx, NewGetVolumesWithBalancesQuery(NewPaginatedQueryOptions(
 			FiltersForVolumes{
-				PITFilter:        PITFilter{PIT: &now, OOT: &previous_oot},
+				PITFilter:        PITFilter{PIT: &now, OOT: &previousOOT},
 				UseInsertionDate: false,
 			})))
 
@@ -335,7 +335,7 @@ func TestGetVolumesWithBalances(t *testing.T) {
 			NewGetVolumesWithBalancesQuery(
 				NewPaginatedQueryOptions(
 					FiltersForVolumes{
-						PITFilter:        PITFilter{PIT: &now, OOT: &previous_oot},
+						PITFilter:        PITFilter{PIT: &now, OOT: &previousOOT},
 						UseInsertionDate: false,
 					}).WithQueryBuilder(query.Match("account", "account:1"))),
 		)
@@ -362,11 +362,11 @@ func TestAggGetVolumesWithBalances(t *testing.T) {
 	now := time.Now()
 	ctx := logging.TestingContext()
 
-	// previous_pit := now.Add(-2 * time.Minute)
-	futur_pit := now.Add(2 * time.Minute)
+	// previousPIT := now.Add(-2 * time.Minute)
+	futurPIT := now.Add(2 * time.Minute)
 
-	previous_oot := now.Add(-2 * time.Minute)
-	// futur_oot := now.Add(2 * time.Minute)
+	previousOOT := now.Add(-2 * time.Minute)
+	// futurOOT := now.Add(2 * time.Minute)
 
 	require.NoError(t, store.InsertLogs(ctx,
 		ledger.ChainLogs(
@@ -485,8 +485,8 @@ func TestAggGetVolumesWithBalances(t *testing.T) {
 			NewPaginatedQueryOptions(
 				FiltersForVolumes{
 					PITFilter: PITFilter{
-						PIT: &futur_pit,
-						OOT: &previous_oot,
+						PIT: &futurPIT,
+						OOT: &previousOOT,
 					},
 					UseInsertionDate: false,
 					GroupLvl:         1,
@@ -520,8 +520,8 @@ func TestAggGetVolumesWithBalances(t *testing.T) {
 			NewPaginatedQueryOptions(
 				FiltersForVolumes{
 					PITFilter: PITFilter{
-						PIT: &futur_pit,
-						OOT: &previous_oot,
+						PIT: &futurPIT,
+						OOT: &previousOOT,
 					},
 					UseInsertionDate: false,
 					GroupLvl:         1,
@@ -547,8 +547,8 @@ func TestAggGetVolumesWithBalances(t *testing.T) {
 			NewPaginatedQueryOptions(
 				FiltersForVolumes{
 					PITFilter: PITFilter{
-						PIT: &futur_pit,
-						OOT: &previous_oot,
+						PIT: &futurPIT,
+						OOT: &previousOOT,
 					},
 					UseInsertionDate: false,
 					GroupLvl:         1,
